@@ -4,5 +4,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface Maze extends Remote {
-	String sayMaze() throws RemoteException;
+	public int joinGame(IClient client) throws RemoteException;
+	public GameStatus move(MoveDirection moveDirection) throws RemoteException;
 }
