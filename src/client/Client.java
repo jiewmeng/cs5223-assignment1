@@ -28,8 +28,9 @@ public class Client implements IClient {
 			client.id = stub.joinGame(client);
 			if (client.id == -1) {
 				System.out.println("Server rejected client. Game started.");
+			} else {
+				System.out.println("Client connected with id " + client.id);
 			}
-			System.out.println("Client connected with id " + client.id);
 		} catch (Exception e) {
 			System.err.println("Client exception: " + e.toString());
 			e.printStackTrace();
