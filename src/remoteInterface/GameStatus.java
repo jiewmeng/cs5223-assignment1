@@ -6,6 +6,22 @@ import java.util.Vector;
  * The object that is sent back to clients updating them about the game state
  */
 public class GameStatus {
+
+	/**
+	 * Grid Size
+	 */
+	public int gridSize;
+	
+	/**
+	 * Number of Treasures
+	 */
+	public int numTreasures;
+	
+	/**
+	 * Number of Treasures left
+	 */
+	public int numTreasuresLeft;
+	
 	/**
 	 * Their new location
 	 */
@@ -30,4 +46,5 @@ public class GameStatus {
 	 * Coordinates of all remaining treasures
 	 */
 	public Vector<Coordinates> treasurePositions;
+	
 }
