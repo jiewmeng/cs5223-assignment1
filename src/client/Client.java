@@ -4,13 +4,16 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Random;
 
 import remoteInterface.IClient;
-import remoteInterface.Maze;
+import remoteInterface.IServer;
+import remoteInterface.MoveDirection;
 
 public class Client implements IClient {
 	
 	public int id; // public for simplicity
+	public IServer iServer = null;
 	
 	private Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
@@ -23,12 +26,13 @@ public class Client implements IClient {
 		try {
 			client = new Client();
 			Registry registry = LocateRegistry.getRegistry(host);
-			Maze stub = (Maze) registry.lookup("Maze");
+			IServer stub = (IServer) registry.lookup("Maze");
 			
 			client.id = stub.joinGame(client);
 			if (client.id == -1) {
 				System.out.println("Server rejected client. Game started.");
 			} else {
+				client.iServer = stub;
 				System.out.println("Client connected with id " + client.id);
 			}
 		} catch (Exception e) {
@@ -41,4 +45,9 @@ public class Client implements IClient {
 	public void startGame() {
 		System.out.println("should start game ... call moves ...");
 	}
+	
+	public void move(Random rand) throws RemoteException {
+		this.iServer.move(this.id, MoveDirection.getRandDir());
+	}
+	
 }

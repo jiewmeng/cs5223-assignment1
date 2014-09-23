@@ -40,11 +40,11 @@ public class GameStatus {
 	/**
 	 * Coordinates of all players
 	 */
-	public Vector<Coordinates> playerPositions;
+	public Vector<Player> players;
 	
 	/**
-	 * Coordinates of all remaining treasures
+	 * Treasures in the grid
 	 */
-	public Vector<Coordinates> treasurePositions;
+	public int[][] treasures;
 	
 }
