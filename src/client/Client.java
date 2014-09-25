@@ -5,10 +5,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import remoteInterface.GameStatus;
 import remoteInterface.IClient;
 import remoteInterface.IServer;
-import remoteInterface.MoveDirection;
 
 public class Client implements IClient {
 
