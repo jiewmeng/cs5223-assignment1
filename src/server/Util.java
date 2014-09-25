@@ -1,5 +1,6 @@
 package server;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Vector;
 
@@ -9,27 +10,20 @@ import remoteInterface.Player;
 
 public class Util {
 
-	public static int[][] initRandomGrid(int gridSize,
-			int numTreasures) {
+	public static int[][] initTreasuresGrid(int gridSize, int numTreasures) {
 
 		int[][] grid = new int[gridSize][gridSize];
 		Random rand = new Random();
-		
+
 		for (int i = 0; i < numTreasures; i++) {
 			grid[randInt(rand, 0, gridSize - 1)][randInt(rand, 0, gridSize - 1)]++;
 		}
-		
+
 		return grid;
 	}
 
 	private static int randInt(Random rand, int min, int max) {
 		return rand.nextInt((max - min) + 1) + min;
-	}
-
-	public static void printTreasureInfo(int gridSize,
-			int[][] treasures) {
-
-		printGrid(treasures, "Treasure Positions");
 	}
 
 	public static Vector<Player> initPlayers(int gridSize,
@@ -58,39 +52,22 @@ public class Util {
 		return players;
 	}
 
-	public static void printPlayerInfo(int gridSize, Vector<Player> players) {
+	public static int[][] initPlayersGrid(int gridSize, Vector<Player> players) {
 
-		int[][] grid = new int[gridSize][gridSize];
-		
-		for (int i = 0; i < grid.length; i++) {
-			for (int j = 0; j < grid[i].length; j++) {
-				grid[i][j] = -1;
-			}
+		int[][] playersGrid = new int[gridSize][gridSize];
+		fill2dArray(playersGrid, -1);
+
+		for (Player p : players) {
+			playersGrid[p.coordinates.x][p.coordinates.y] = p.id;
 		}
 
-		for (Player player : players) {
-			grid[player.coordinates.x][player.coordinates.y] = player.id;
-		}
-
-		printGrid(grid, "Player Positions");
+		return playersGrid;
 	}
 
-	private static void printGrid(int[][] grid, String title) {
-
-		System.out.println("--- " + title + " ---");
-
-		for (int i = 0; i < grid.length; i++) {
-			for (int j = 0; j < grid[i].length; j++) {
-				System.out.format("%4d", grid[i][j]);
-			}
-			System.out.println();
+	private static void fill2dArray(int[][] arr, int val) {
+		for (int i = 0; i < arr.length; i++) {
+			Arrays.fill(arr[i], val);
 		}
-
-		for (int i = 0; i < title.length() + 8; i++) {
-			System.out.print("-");
-		}
-		System.out.println();
-
 	}
 
 }

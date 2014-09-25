@@ -1,11 +1,14 @@
 package remoteInterface;
 
+import java.io.Serializable;
 import java.util.Vector;
 
 /**
  * The object that is sent back to clients updating them about the game state
  */
-public class GameStatus {
+public class GameStatus implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Grid Size
@@ -25,17 +28,17 @@ public class GameStatus {
 	/**
 	 * Their new location
 	 */
-	public Coordinates newLocation;
+//	public Coordinates newLocation;
 	
 	/**
 	 * Treasures found from their latest move
 	 */
-	public int newTreasuresFound;
+//	public int newTreasuresFound;
 	
 	/**
 	 * Total treasures they found so far
 	 */
-	public int totalTreasuresFound;
+//	public int totalTreasuresFound;
 	
 	/**
 	 * Coordinates of all players
@@ -47,6 +50,40 @@ public class GameStatus {
 	/**
 	 * Treasures in the grid
 	 */
-	public int[][] treasures;
+	public int[][] treasuresGrid;
+	
+	public void print() {
+		System.out.println("////////");
+		System.out.println(numTreasuresLeft + " treasures left");
+		printTreasuresGrid();
+		printPlayersGrid();
+		System.out.println("////////");
+	}
+	
+	public void printTreasuresGrid() {
+		printGrid(this.treasuresGrid, "Treasures");
+	}
+
+	public void printPlayersGrid() {
+		printGrid(this.playersGrid, "Players");
+	}
+
+	public void printGrid(int[][] grid, String title) {
+
+		System.out.println("--- " + title + " ---");
+
+		for (int i = 0; i < grid.length; i++) {
+			for (int j = 0; j < grid[i].length; j++) {
+				System.out.format("%4d", grid[i][j]);
+			}
+			System.out.println();
+		}
+
+//		for (int i = 0; i < title.length() + 8; i++) {
+//			System.out.print("-");
+//		}
+//		System.out.println();
+
+	}
 	
 }

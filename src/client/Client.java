@@ -4,17 +4,17 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Random;
 
+import remoteInterface.GameStatus;
 import remoteInterface.IClient;
 import remoteInterface.IServer;
 import remoteInterface.MoveDirection;
 
 public class Client implements IClient {
-	
+
 	public int id; // public for simplicity
 	public IServer iServer = null;
-	
+
 	private Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
 	}
@@ -27,10 +27,11 @@ public class Client implements IClient {
 			client = new Client();
 			Registry registry = LocateRegistry.getRegistry(host);
 			IServer stub = (IServer) registry.lookup("Maze");
-			
+
 			client.id = stub.joinGame(client);
 			if (client.id == -1) {
-				System.out.println("Server rejected client. Game started.");
+				System.out
+						.println("Server rejected client. Game has already started.");
 			} else {
 				client.iServer = stub;
 				System.out.println("Client connected with id " + client.id);
@@ -42,12 +43,29 @@ public class Client implements IClient {
 	}
 
 	@Override
-	public void startGame() {
-		System.out.println("should start game ... call moves ...");
+	public void startGame() throws RemoteException {
+		
+		GameStatus gameStatus;
+
+		System.out.println("Game starts...");
+		do {
+			gameStatus = this.move();
+			gameStatus.print();
+			// TODO Give a random delay 
+			try {
+				Thread.sleep(300);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		} while (gameStatus.numTreasuresLeft > 0);
+		
 	}
-	
-	public void move(Random rand) throws RemoteException {
-		this.iServer.move(this.id, MoveDirection.getRandDir());
+
+	private GameStatus move() throws RemoteException {
+		MoveDirection moveDirection = MoveDirection.getRandDir();
+		moveDirection.print();
+		return this.iServer.move(this.id, moveDirection);
 	}
-	
+
 }

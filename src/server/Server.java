@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
@@ -18,9 +17,10 @@ import remoteInterface.Player;
 
 public class Server implements IServer {
 
-	public static final int WAIT_FOR_PLAYERS_IN_SECONDS = 20;
-	public static final int DEFAULT_GRID_SIZE = 5;
-	public static final int DEFAULT_NUM_TREASURES = 10;
+	// TODO: Configure these
+	public static final int WAIT_FOR_PLAYERS_IN_SECONDS = 10;
+	public static final int DEFAULT_GRID_SIZE = 3;
+	public static final int DEFAULT_NUM_TREASURES = 4;
 
 	protected int nextId;
 	protected Vector<IClient> clients;
@@ -69,33 +69,31 @@ public class Server implements IServer {
 			this.serverGameStatus.gridSize = Server.DEFAULT_GRID_SIZE;
 			this.serverGameStatus.numTreasures = Server.DEFAULT_NUM_TREASURES;
 		}
+		this.serverGameStatus.numTreasuresLeft = this.serverGameStatus.numTreasures;
 	}
 
 	protected void startGame() throws RemoteException {
 
 		// Init grid with treasures
-		this.serverGameStatus.treasures = Util.initRandomGrid(
+		this.serverGameStatus.treasuresGrid = Util.initTreasuresGrid(
 				this.serverGameStatus.gridSize,
 				this.serverGameStatus.numTreasures);
-
-		// Print treasures
-		Util.printTreasureInfo(this.serverGameStatus.gridSize,
-				this.serverGameStatus.treasures);
 
 		// Init player positions
 		this.serverGameStatus.players = Util.initPlayers(
 				this.serverGameStatus.gridSize, this.clients);
-		this.serverGameStatus.playersGrid = new int[this.serverGameStatus.gridSize][this.serverGameStatus.gridSize];
-		Arrays.fill(this.serverGameStatus.playersGrid, -1);
+
+		// Init player grid
+		this.serverGameStatus.playersGrid = Util.initPlayersGrid(
+				this.serverGameStatus.gridSize, this.serverGameStatus.players);
+
+		// Print game status
+		this.serverGameStatus.print();
+
+		// Assign treasures if they are at player's init position
 		for (Player p : this.serverGameStatus.players) {
-			this.serverGameStatus.playersGrid[p.coordinates.x][p.coordinates.y] = p.id;
+			this.move(p.id, MoveDirection.NO_MOVE);
 		}
-
-		// Print players
-		Util.printPlayerInfo(this.serverGameStatus.gridSize,
-				this.serverGameStatus.players);
-
-		// TODO Assign treasures if they are at player's init position
 
 		this.isGameStarted = true;
 		announceStartGame();
@@ -147,21 +145,38 @@ public class Server implements IServer {
 	public GameStatus move(int clientId, MoveDirection moveDirection)
 			throws RemoteException {
 
+		// Game has ended
+		if (this.serverGameStatus.numTreasuresLeft <= 0) {
+			return this.serverGameStatus;
+		}
+		
+		/*
+		 * Grid coordinates
+		 * 	  y0 y1 y2 . . .
+		 * x0
+		 * x1
+		 * x2
+		 * .
+		 * .
+		 * .
+		 */
 		Player player = this.serverGameStatus.players.get(clientId);
 		Coordinates oldCoord = player.coordinates;
 		Coordinates newCoord = new Coordinates(oldCoord.x, oldCoord.y);
 		switch (moveDirection) {
 		case N:
-			newCoord.y += 1;
+			newCoord.x -= 1;
 			break;
 		case S:
-			newCoord.y -= 1;
-			break;
-		case E:
 			newCoord.x += 1;
 			break;
+		case E:
+			newCoord.y += 1;
+			break;
 		case W:
-			newCoord.x -= 1;
+			newCoord.y -= 1;
+			break;
+		case NO_MOVE:
 			break;
 		default:
 			break;
@@ -176,14 +191,14 @@ public class Server implements IServer {
 			// new coord contains another player
 			newCoord = oldCoord;
 		}
-		
-		this.serverGameStatus.newTreasuresFound = this.serverGameStatus.treasures[newCoord.x][newCoord.y];
-		this.serverGameStatus.treasures[newCoord.x][newCoord.y] = 0;
-		this.serverGameStatus.numTreasuresLeft -= this.serverGameStatus.newTreasuresFound;
-		this.serverGameStatus.newLocation = newCoord;
-		//TODO total treasures found by specific player
-		this.serverGameStatus.totalTreasuresFound = -1;
-		
+
+		player.coordinates = newCoord;
+		player.newTreasuresFound = this.serverGameStatus.treasuresGrid[newCoord.x][newCoord.y];
+		player.totalTreasuresFound += player.newTreasuresFound;
+
+		this.serverGameStatus.treasuresGrid[newCoord.x][newCoord.y] = 0;
+		this.serverGameStatus.numTreasuresLeft -= player.newTreasuresFound;
+
 		// update game status
 		this.serverGameStatus.playersGrid[oldCoord.x][oldCoord.y] = -1;
 		this.serverGameStatus.playersGrid[newCoord.x][newCoord.y] = clientId;
