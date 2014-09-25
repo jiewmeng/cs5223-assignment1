@@ -106,7 +106,7 @@ public class Server implements IServer {
 	}
 
 	@Override
-	public int joinGame(IClient client) throws RemoteException {
+	public synchronized int joinGame(IClient client) throws RemoteException {
 		// once game is started, no new connections are accepted
 		if (this.isGameStarted) {
 			System.out.println("Server rejected client. Game started.");
@@ -142,7 +142,7 @@ public class Server implements IServer {
 	}
 
 	@Override
-	public GameStatus move(int clientId, MoveDirection moveDirection)
+	public synchronized GameStatus move(int clientId, MoveDirection moveDirection)
 			throws RemoteException {
 
 		// Game has ended
