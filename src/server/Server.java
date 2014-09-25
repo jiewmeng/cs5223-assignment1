@@ -4,10 +4,12 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import remoteInterface.Coordinates;
 import remoteInterface.GameStatus;
 import remoteInterface.IClient;
 import remoteInterface.IServer;
@@ -35,7 +37,7 @@ public class Server implements IServer {
 	public static void main(String args[]) {
 		IServer stub = null;
 		Registry registry = null;
-		
+
 		try {
 			Server server = new Server();
 			stub = (IServer) UnicastRemoteObject.exportObject(server, 0);
@@ -84,6 +86,7 @@ public class Server implements IServer {
 		this.serverGameStatus.players = Util.initPlayers(
 				this.serverGameStatus.gridSize, this.clients);
 		this.serverGameStatus.playersGrid = new int[this.serverGameStatus.gridSize][this.serverGameStatus.gridSize];
+		Arrays.fill(this.serverGameStatus.playersGrid, -1);
 		for (Player p : this.serverGameStatus.players) {
 			this.serverGameStatus.playersGrid[p.coordinates.x][p.coordinates.y] = p.id;
 		}
@@ -143,7 +146,49 @@ public class Server implements IServer {
 	@Override
 	public GameStatus move(int clientId, MoveDirection moveDirection)
 			throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+
+		Player player = this.serverGameStatus.players.get(clientId);
+		Coordinates oldCoord = player.coordinates;
+		Coordinates newCoord = new Coordinates(oldCoord.x, oldCoord.y);
+		switch (moveDirection) {
+		case N:
+			newCoord.y += 1;
+			break;
+		case S:
+			newCoord.y -= 1;
+			break;
+		case E:
+			newCoord.x += 1;
+			break;
+		case W:
+			newCoord.x -= 1;
+			break;
+		default:
+			break;
+		}
+
+		if (newCoord.x < 0 || newCoord.x >= this.serverGameStatus.gridSize
+				|| newCoord.y < 0
+				|| newCoord.y >= this.serverGameStatus.gridSize) {
+			// out of grid bounds
+			newCoord = oldCoord;
+		} else if (this.serverGameStatus.playersGrid[newCoord.x][newCoord.y] >= 0) {
+			// new coord contains another player
+			newCoord = oldCoord;
+		}
+		
+		this.serverGameStatus.newTreasuresFound = this.serverGameStatus.treasures[newCoord.x][newCoord.y];
+		this.serverGameStatus.treasures[newCoord.x][newCoord.y] = 0;
+		this.serverGameStatus.numTreasuresLeft -= this.serverGameStatus.newTreasuresFound;
+		this.serverGameStatus.newLocation = newCoord;
+		//TODO total treasures found by specific player
+		this.serverGameStatus.totalTreasuresFound = -1;
+		
+		// update game status
+		this.serverGameStatus.playersGrid[oldCoord.x][oldCoord.y] = -1;
+		this.serverGameStatus.playersGrid[newCoord.x][newCoord.y] = clientId;
+		player.coordinates = newCoord;
+
+		return this.serverGameStatus;
 	}
 }

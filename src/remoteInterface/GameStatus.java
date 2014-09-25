@@ -25,7 +25,7 @@ public class GameStatus {
 	/**
 	 * Their new location
 	 */
-	public MoveDirection newLocation;
+	public Coordinates newLocation;
 	
 	/**
 	 * Treasures found from their latest move
