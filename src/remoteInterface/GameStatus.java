@@ -68,7 +68,7 @@ public class GameStatus implements Serializable {
 		printGrid(this.playersGrid, "Players");
 	}
 
-	public void printGrid(int[][] grid, String title) {
+	private void printGrid(int[][] grid, String title) {
 
 		System.out.println("--- " + title + " ---");
 

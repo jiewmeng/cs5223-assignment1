@@ -203,6 +203,11 @@ public class Server implements IServer {
 		this.serverGameStatus.playersGrid[oldCoord.x][oldCoord.y] = -1;
 		this.serverGameStatus.playersGrid[newCoord.x][newCoord.y] = clientId;
 		player.coordinates = newCoord;
+		
+		
+		System.out.print("Player " + clientId + " ");
+		moveDirection.print();
+		this.serverGameStatus.print();
 
 		return this.serverGameStatus;
 	}
