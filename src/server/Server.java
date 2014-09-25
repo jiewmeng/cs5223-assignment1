@@ -12,6 +12,7 @@ import remoteInterface.GameStatus;
 import remoteInterface.IClient;
 import remoteInterface.IServer;
 import remoteInterface.MoveDirection;
+import remoteInterface.Player;
 
 public class Server implements IServer {
 
@@ -82,6 +83,10 @@ public class Server implements IServer {
 		// Init player positions
 		this.serverGameStatus.players = Util.initPlayers(
 				this.serverGameStatus.gridSize, this.clients);
+		this.serverGameStatus.playersGrid = new int[this.serverGameStatus.gridSize][this.serverGameStatus.gridSize];
+		for (Player p : this.serverGameStatus.players) {
+			this.serverGameStatus.playersGrid[p.coordinates.x][p.coordinates.y] = p.id;
+		}
 
 		// Print players
 		Util.printPlayerInfo(this.serverGameStatus.gridSize,

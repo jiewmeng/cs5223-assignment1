@@ -12,4 +12,9 @@ public class Coordinates {
 		this.y = y;
 	}
 	
+	public boolean equals(Object c) {
+		Coordinates coord = (Coordinates)c;
+		return (this.x == coord.x && this.y == coord.y);
+	}
+	
 }

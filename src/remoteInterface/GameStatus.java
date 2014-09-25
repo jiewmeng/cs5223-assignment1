@@ -40,6 +40,8 @@ public class GameStatus {
 	/**
 	 * Coordinates of all players
 	 */
+	public int[][] playersGrid;
+	
 	public Vector<Player> players;
 	
 	/**
