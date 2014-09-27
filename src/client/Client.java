@@ -5,6 +5,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+import remoteInterface.GameStatus;
 import remoteInterface.IClient;
 import remoteInterface.IServer;
 
@@ -41,9 +42,9 @@ public class Client implements IClient {
 	}
 
 	@Override
-	public void startGame() throws RemoteException {
+	public void startGame(GameStatus initGameStatus) throws RemoteException {
 		
-		Thread t = new Thread(new GamePlay(this.id, this.iServer));
+		Thread t = new Thread(new GamePlay(this.id, this.iServer, initGameStatus));
 		t.start();
 	}
 

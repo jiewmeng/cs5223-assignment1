@@ -96,12 +96,12 @@ public class Server implements IServer {
 		}
 
 		this.isGameStarted = true;
-		announceStartGame();
+		announceStartGame(this.serverGameStatus);
 	}
 
-	protected void announceStartGame() throws RemoteException {
+	protected void announceStartGame(GameStatus initGameStatus) throws RemoteException {
 		for (IClient client : this.clients) {
-			client.startGame();
+			client.startGame(initGameStatus);
 		}
 	}
 
@@ -203,7 +203,6 @@ public class Server implements IServer {
 		this.serverGameStatus.playersGrid[oldCoord.x][oldCoord.y] = -1;
 		this.serverGameStatus.playersGrid[newCoord.x][newCoord.y] = clientId;
 		player.coordinates = newCoord;
-		
 		
 		System.out.print("Player " + clientId + " ");
 		moveDirection.print();
