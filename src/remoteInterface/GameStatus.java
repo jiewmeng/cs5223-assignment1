@@ -52,6 +52,8 @@ public class GameStatus implements Serializable {
 	 */
 	public int[][] treasuresGrid;
 	
+	public IServer backupServer;
+	
 	public void print() {
 		System.out.println("////////");
 		System.out.println(numTreasuresLeft + " treasures left");

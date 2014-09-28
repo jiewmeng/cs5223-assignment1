@@ -8,8 +8,9 @@ import java.rmi.server.UnicastRemoteObject;
 import remoteInterface.GameStatus;
 import remoteInterface.IClient;
 import remoteInterface.IServer;
+import server.AbstractServer;
 
-public class Client implements IClient {
+public class Client extends AbstractServer implements IClient {
 
 	public int id;
 	public IServer iServer = null;
