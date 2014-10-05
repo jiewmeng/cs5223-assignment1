@@ -62,8 +62,8 @@ public class Client extends Server implements IClient {
 
 		IServer stub = null;
 		Registry registry = null;
-		clientServer.init(args);
 
+		clientServer.initGridParam(args);
 		try {
 			try {
 				stub = (IServer) UnicastRemoteObject.exportObject(clientServer, 0);

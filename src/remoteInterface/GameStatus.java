@@ -56,6 +56,8 @@ public class GameStatus implements Serializable {
 	
 	public IServer backupServer;
 	
+	public boolean isGameStarted = false;
+	
 	public void print() {
 		System.out.println("////////");
 		System.out.println(numTreasuresLeft + " treasures left");
@@ -83,11 +85,6 @@ public class GameStatus implements Serializable {
 			}
 			System.out.println();
 		}
-
-//		for (int i = 0; i < title.length() + 8; i++) {
-//			System.out.print("-");
-//		}
-//		System.out.println();
 
 	}
 	

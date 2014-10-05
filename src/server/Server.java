@@ -21,12 +21,13 @@ public class Server implements IServer {
 	private int id;
 	protected int nextId;
 	protected Vector<IClient> clients;
-	protected boolean isGameStarted;
 	protected GameStatus serverGameStatus;
 	protected boolean primaryFailed = false;
 
 	public Server() {
-		
+		this.nextId = 0;
+		this.clients = new Vector<IClient>();
+		this.serverGameStatus = new GameStatus();
 	}
 	
 	public int getId() {
@@ -37,15 +38,7 @@ public class Server implements IServer {
 		this.id = id;
 	}
 	
-	public void init(String[] args) {
-		this.nextId = 0;
-		this.clients = new Vector<IClient>();
-		this.isGameStarted = false;
-		this.serverGameStatus = new GameStatus();
-		this.initGridParam(args);
-	}
-	
-	protected void initGridParam(String[] args) {
+	public void initGridParam(String[] args) {
 		if (args.length >= 2) {
 			this.serverGameStatus.gridSize = Integer.parseInt(args[0]);
 			this.serverGameStatus.numTreasures = Integer.parseInt(args[1]);
@@ -91,7 +84,7 @@ public class Server implements IServer {
 			this.move(p.id, MoveDirection.NO_MOVE);
 		}
 
-		this.isGameStarted = true;
+		this.serverGameStatus.isGameStarted = true;
 		announceStartGame(this.serverGameStatus);
 	}
 
@@ -155,7 +148,7 @@ public class Server implements IServer {
 	@Override
 	public synchronized int joinGame(IClient iClient) throws RemoteException {
 		// once game is started, no new connections are accepted
-		if (this.isGameStarted) {
+		if (this.serverGameStatus.isGameStarted) {
 			System.out.println("Server rejected client. Game started.");
 			return -1;
 		}
