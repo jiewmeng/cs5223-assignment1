@@ -7,17 +7,18 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 import remoteInterface.GameStatus;
-import remoteInterface.IClient;
+import remoteInterface.IPlayer;
 import remoteInterface.IServer;
 import server.AbstractServer;
 
-public class Client extends AbstractServer implements IClient, Serializable {
+public class Client extends AbstractServer implements IPlayer, Serializable {
 
+	private static final long serialVersionUID = -7603873198996451630L;
 	public int id;
 	public IServer iServer = null;
 
 	public Client() throws RemoteException {
-//		UnicastRemoteObject.exportObject(this, 0);
+		UnicastRemoteObject.exportObject(this, 0);
 	}
 
 	public static void main(String[] args) throws RemoteException {
@@ -27,6 +28,7 @@ public class Client extends AbstractServer implements IClient, Serializable {
 		try {
 			client = new Client();
 			Registry registry = LocateRegistry.getRegistry(host);
+			System.out.println("Lookup maze");
 			IServer stub = (IServer) registry.lookup("Maze");
 
 			client.id = stub.joinGame(client);
@@ -48,6 +50,11 @@ public class Client extends AbstractServer implements IClient, Serializable {
 		
 		Thread t = new Thread(new GamePlay(this.id, this.iServer, initGameStatus));
 		t.start();
+	}
+
+	@Override
+	public int getId() {
+		return this.id;
 	}
 
 }

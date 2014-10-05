@@ -5,10 +5,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-import client.Client;
 import remoteInterface.Coordinates;
 import remoteInterface.GameStatus;
-import remoteInterface.IClient;
+import remoteInterface.IPlayer;
 import remoteInterface.IServer;
 import remoteInterface.MoveDirection;
 import remoteInterface.Player;
@@ -20,14 +19,14 @@ public abstract class AbstractServer implements IServer {
 	public static final int DEFAULT_NUM_TREASURES = 4;
 
 	protected int nextId;
-	protected Vector<Client> clients;
+	protected Vector<IPlayer> clients;
 	protected boolean isGameStarted;
 	protected GameStatus serverGameStatus;
 	protected boolean primaryFailed = false;
 
 	public AbstractServer() {
 		this.nextId = 0;
-		this.clients = new Vector<Client>();
+		this.clients = new Vector<IPlayer>();
 		this.isGameStarted = false;
 		this.serverGameStatus = new GameStatus();
 	}
@@ -83,16 +82,17 @@ public abstract class AbstractServer implements IServer {
 	 * Chooses a backup server. Excludes self and previously non-responsive nodes 
 	 * 
 	 * @return true if successfully choose a backup server
+	 * @throws RemoteException 
 	 */
-	private boolean chooseBackup() {
+	private boolean chooseBackup() throws RemoteException {
 		boolean success = false;
 		IServer candidateServer;
-		Client self = (Client)this;
+		IPlayer self = (IPlayer)this;
 		for (int i = 0; i < this.clients.size(); i++) {
 			candidateServer = this.clients.get(i);
 			
 			// some validation
-			if (i == self.id || candidateServer == null) {
+			if (i == self.getId() || candidateServer == null) {
 				// candidate cannot be self or null 
 				// (indicating a previously non-responsive server)
 				System.out.println("Choosing backup ... skipping #" + i);
@@ -114,13 +114,13 @@ public abstract class AbstractServer implements IServer {
 	}
 	
 	protected void announceStartGame(GameStatus initGameStatus) throws RemoteException {
-		for (IClient client : this.clients) {
+		for (IPlayer client : this.clients) {
 			client.startGame(initGameStatus);
 		}
 	}
 
 	@Override
-	public synchronized int joinGame(Client client) throws RemoteException {
+	public synchronized int joinGame(IPlayer client) throws RemoteException {
 		// once game is started, no new connections are accepted
 		if (this.isGameStarted) {
 			System.out.println("Server rejected client. Game started.");
@@ -135,7 +135,7 @@ public abstract class AbstractServer implements IServer {
 							+ WAIT_FOR_PLAYERS_IN_SECONDS + "s");
 			
 			// add self to game too
-			this.clients.add(0, (Client)this);
+			this.clients.add(0, (IPlayer)this);
 			nextId++;
 			System.out.println("Server joined game with id 0");
 
@@ -227,7 +227,7 @@ public abstract class AbstractServer implements IServer {
 		moveDirection.print();
 		this.serverGameStatus.print();
 		
-		this.serverGameStatus.backupServer.updateState(serverGameStatus);
+		//this.serverGameStatus.backupServer.updateState(this.serverGameStatus);
 
 		return this.serverGameStatus;
 	}

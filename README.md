@@ -39,3 +39,7 @@ Plan for part 2:
     - Once selected, new primary (previously backup) will ping new ckup server, to verify its working
     - If no response, it will choose a new backup
     - Once a new backup is selected, broadcast to all clients, tifying them of new backup server
+
+
+## Misc Ideas
+

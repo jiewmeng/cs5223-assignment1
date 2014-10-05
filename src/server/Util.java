@@ -5,8 +5,8 @@ import java.util.Random;
 import java.util.Vector;
 
 import remoteInterface.Coordinates;
+import remoteInterface.IPlayer;
 import remoteInterface.Player;
-import client.Client;
 
 public class Util {
 
@@ -27,7 +27,7 @@ public class Util {
 	}
 
 	public static Vector<Player> initPlayers(int gridSize,
-			Vector<Client> clients) {
+			Vector<IPlayer> clients) {
 
 		Vector<Player> players = new Vector<Player>();
 		Vector<Coordinates> coords = new Vector<Coordinates>();

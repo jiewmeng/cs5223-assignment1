@@ -26,8 +26,10 @@ public class Server extends AbstractServer {
 				// likely here because its main server. Can skip exporting itself
 				stub = (IServer) UnicastRemoteObject.toStub(server);
 			}
+			server.iServer = stub;
 			
 			registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+			System.out.println("Bound stub");
 			registry.bind("Maze", stub);
 
 			// Set N and M
