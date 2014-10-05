@@ -32,6 +32,10 @@ public class GamePlay implements Runnable {
 		do {
 			try {
 				gameStatus = this.move();
+				if (gameStatus == null) {
+					// eg. when no backup server anymore
+					break;
+				}
 				System.out
 						.println(gameStatus.players.get(this.id).totalTreasuresFound
 								+ " treasures collected");
@@ -42,7 +46,7 @@ public class GamePlay implements Runnable {
 
 			// Give a random delay
 			try {
-				Thread.sleep(randInt(rand, 1, 300));
+				Thread.sleep(randInt(rand, 200, 1000));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -52,9 +56,20 @@ public class GamePlay implements Runnable {
 	}
 
 	private GameStatus move() throws RemoteException {
+		GameStatus state; 
 		MoveDirection moveDirection = MoveDirection.getRandDir();
 		moveDirection.print();
-		return this.iServer.move(this.id, moveDirection);
+		try {
+			state = this.iServer.move(this.id, moveDirection);
+		} catch (RemoteException e) {
+			try {
+				state = this.initGameStatus.backupServer.primaryFailed(this.id, moveDirection);
+			} catch (RemoteException ee) {
+				return null;
+			}
+		}
+		
+		return state;
 	}
 	
 	private static int randInt(Random rand, int min, int max) {

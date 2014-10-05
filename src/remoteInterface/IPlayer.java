@@ -7,4 +7,5 @@ import java.rmi.RemoteException;
  */
 public interface IPlayer extends IServer, IClient {
 	public int getId() throws RemoteException;
+	//public void updateGameState(GameStatus state) throws RemoteException;
 }
