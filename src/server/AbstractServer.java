@@ -63,6 +63,7 @@ public abstract class AbstractServer implements IServer {
 				this.serverGameStatus.gridSize, this.serverGameStatus.players);
 
 		// Print game status
+		this.serverGameStatus.primaryServer = this;
 		this.serverGameStatus.print();
 		
 		// choose a backup server

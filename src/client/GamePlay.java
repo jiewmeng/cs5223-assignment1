@@ -4,42 +4,44 @@ import java.rmi.RemoteException;
 import java.util.Random;
 
 import remoteInterface.GameStatus;
+import remoteInterface.IPlayer;
 import remoteInterface.IServer;
 import remoteInterface.MoveDirection;
 
 public class GamePlay implements Runnable {
 
 	public int id;
-	public IServer iServer = null;
-	public GameStatus initGameStatus;
+	public GameStatus gameState;
 
 	public GamePlay(int id, IServer iServer, GameStatus initGameStatus) {
 		this.id = id;
-		this.iServer = iServer;
-		this.initGameStatus = initGameStatus;
+		this.gameState = initGameStatus;
 	}
 
 	@Override
 	public void run() {
 
-		GameStatus gameStatus = null;
 		Random rand = new Random();
 
 		System.out.println("Game initializing...");
-		initGameStatus.print();
+		gameState.print();
 		System.out.println("Game starts...");
 		
 		do {
 			try {
-				gameStatus = this.move();
-				if (gameStatus == null) {
+				this.move();
+				if (gameState == null) {
 					// eg. when no backup server anymore
 					break;
 				}
+				
+				System.out.println("DEBUG: primary server " + ((IPlayer)gameState.primaryServer).getId());
+				System.out.println("DEBUG: backup server " + ((IPlayer)gameState.backupServer).getId());
+				
 				System.out
-						.println(gameStatus.players.get(this.id).totalTreasuresFound
+						.println(gameState.players.get(this.id).totalTreasuresFound
 								+ " treasures collected");
-				gameStatus.print();
+				gameState.print();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -51,25 +53,22 @@ public class GamePlay implements Runnable {
 				e.printStackTrace();
 			}
 
-		} while (gameStatus != null && gameStatus.numTreasuresLeft > 0);
+		} while (gameState != null && gameState.numTreasuresLeft > 0);
 
 	}
 
-	private GameStatus move() throws RemoteException {
-		GameStatus state; 
+	private void move() throws RemoteException {
 		MoveDirection moveDirection = MoveDirection.getRandDir();
 		moveDirection.print();
 		try {
-			state = this.iServer.move(this.id, moveDirection);
+			this.gameState = this.gameState.primaryServer.move(this.id, moveDirection);
 		} catch (RemoteException e) {
 			try {
-				state = this.initGameStatus.backupServer.primaryFailed(this.id, moveDirection);
+				this.gameState = this.gameState.backupServer.primaryFailed(this.id, moveDirection);
 			} catch (RemoteException ee) {
-				return null;
+				return;
 			}
 		}
-		
-		return state;
 	}
 	
 	private static int randInt(Random rand, int min, int max) {
