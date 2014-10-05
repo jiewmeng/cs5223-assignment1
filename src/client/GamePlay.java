@@ -47,7 +47,7 @@ public class GamePlay implements Runnable {
 
 			// Give a random delay
 			try {
-				Thread.sleep(randInt(rand, 200, 1000));
+				Thread.sleep(randInt(rand, 2000, 10000));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

@@ -46,13 +46,13 @@ public class Client extends Server implements IClient {
 		IServer stub = (IServer) registry.lookup("Maze");
 
 		this.id = stub.joinGame(this);
-		this.clientServer.setId(this.id);
 		
 		if (this.id == -1) {
 			System.out
 					.println("Server rejected client. Game has already started.");
 		} else {
 			this.iServer = stub;
+			this.clientServer.setId(this.id);
 			System.out.println("Client connected with id " + this.id);
 		}
 		return true;
@@ -62,7 +62,7 @@ public class Client extends Server implements IClient {
 
 		IServer stub = null;
 		Registry registry = null;
-		clientServer = new Server(args);
+		clientServer.init(args);
 
 		try {
 			try {
@@ -96,8 +96,14 @@ public class Client extends Server implements IClient {
 	}
 	
 	@Override
-	public IServer getIServer() throws RemoteException {
-		return this.iServer;
+	public IServer getIClientServer() throws RemoteException {
+		IServer stub = null;
+		try {
+			stub = (IServer) UnicastRemoteObject.exportObject(clientServer, 0);
+		} catch (ExportException e) {
+			stub = (IServer) UnicastRemoteObject.toStub(clientServer);
+		}
+		return stub;
 	}
 
 }

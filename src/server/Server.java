@@ -29,20 +29,20 @@ public class Server implements IServer {
 		
 	}
 	
-	public Server(String[] args) {
-		this.nextId = 0;
-		this.clients = new Vector<IClient>();
-		this.isGameStarted = false;
-		this.serverGameStatus = new GameStatus();
-		this.initGridParam(args);
-	}
-	
 	public int getId() {
 		return id;
 	}
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public void init(String[] args) {
+		this.nextId = 0;
+		this.clients = new Vector<IClient>();
+		this.isGameStarted = false;
+		this.serverGameStatus = new GameStatus();
+		this.initGridParam(args);
 	}
 	
 	protected void initGridParam(String[] args) {
@@ -106,7 +106,13 @@ public class Server implements IServer {
 		boolean success = false;
 		IServer candidateServer;
 		for (int i = 0; i < this.clients.size(); i++) {
-			candidateServer = this.clients.get(i).getIServer();
+			
+			try {
+				candidateServer = this.clients.get(i).getIClientServer();
+			} catch (RemoteException e) {
+				// client/server dead, try others
+				continue;
+			}
 			
 			// some validation
 			if (i == this.id || candidateServer == null) {
