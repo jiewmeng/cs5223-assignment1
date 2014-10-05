@@ -30,9 +30,9 @@ Plan for part 2:
 - At end of wait time, server chooses a backup server 
 - Clients still call move() on primary server. 
     - Primary server will then relay new game state to backup server. 
-    - If client, no response after 1s, primary server is assumed down
+    - If client, no response after 1s, primary server is assumed down (**TODO**)
 - Primary server down: 
-    - Client that found primary is down will call backup to make it e primary server
+    - Client that found primary is down will call backup to make it the primary server
     - Multiple clients may do that ... 
     - While doing so, clients should also send their moveDirections to ckup who will process it
     - Backup server will promote itself to primary, selecting a new ckup server from list of clients

@@ -23,6 +23,7 @@ public abstract class AbstractServer implements IServer {
 	protected Vector<Client> clients;
 	protected boolean isGameStarted;
 	protected GameStatus serverGameStatus;
+	protected boolean primaryFailed = false;
 
 	public AbstractServer() {
 		this.nextId = 0;
@@ -42,6 +43,9 @@ public abstract class AbstractServer implements IServer {
 		this.serverGameStatus.numTreasuresLeft = this.serverGameStatus.numTreasures;
 	}
 
+	/**
+	 * Init game state, start game
+	 */
 	protected void startGame() throws RemoteException {
 
 		// Init grid with treasures
@@ -66,18 +70,49 @@ public abstract class AbstractServer implements IServer {
 		}
 		
 		// choose a backup server
-		this.chooseBackup();
+		if (!this.chooseBackup()) {
+			System.err.println("Failed to choose a backup server");
+			return;
+		}
 
 		this.isGameStarted = true;
 		announceStartGame(this.serverGameStatus);
 	}
 
-	private void chooseBackup() {
-		for (IServer candidateServer : this.clients) {
+	/**
+	 * Chooses a backup server. Excludes self and previously non-responsive nodes 
+	 * 
+	 * @return true if successfully choose a backup server
+	 */
+	private boolean chooseBackup() {
+		boolean success = false;
+		IServer candidateServer;
+		Client self = (Client)this;
+		for (int i = 0; i < this.clients.size(); i++) {
+			candidateServer = this.clients.get(i);
 			
+			// some validation
+			if (i == self.id || candidateServer == null) {
+				// candidate cannot be self or null 
+				// (indicating a previously non-responsive server)
+				System.out.println("Choosing backup ... skipping #" + i);
+				continue; 
+			}
+			
+			try {
+				success = candidateServer.makeBackup(serverGameStatus);
+				if (!success) continue;
+				serverGameStatus.backupServer = candidateServer;
+				System.out.println("Choosing backup ... choose " + i + " as backup server.");
+				return true;
+			} catch (RemoteException e) {
+				System.err.println("Choosing backup ... failed to make #" + i + " a backup server");
+			}
 		}
+		System.err.println("Choosing backup ... failed to choose a backup server");
+		return false;
 	}
-
+	
 	protected void announceStartGame(GameStatus initGameStatus) throws RemoteException {
 		for (IClient client : this.clients) {
 			client.startGame(initGameStatus);
@@ -98,6 +133,11 @@ public abstract class AbstractServer implements IServer {
 			System.out
 					.println("Server received first connection. Starting timer of "
 							+ WAIT_FOR_PLAYERS_IN_SECONDS + "s");
+			
+			// add self to game too
+			this.clients.add(0, (Client)this);
+			nextId++;
+			System.out.println("Server joined game with id 0");
 
 			new Timer().schedule(new TimerTask() {
 
@@ -186,26 +226,61 @@ public abstract class AbstractServer implements IServer {
 		System.out.print("Player " + clientId + " ");
 		moveDirection.print();
 		this.serverGameStatus.print();
+		
+		this.serverGameStatus.backupServer.updateState(serverGameStatus);
 
 		return this.serverGameStatus;
 	}
 	
+	/**
+	 * Promotes a normal client to a backup server
+	 * 
+	 * @return true to acknowledge
+	 */
 	@Override
 	public boolean makeBackup(GameStatus gameState) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+		this.serverGameStatus = gameState;
+		return true;
 	}
 
+	/**
+	 * Backup server receives this from clients notifying it clients cannot 
+	 * connect to primary server
+	 * 
+	 * @return GameStatus
+	 */
 	@Override
-	public boolean primaryFailed(int id, MoveDirection moveDirection)
+	public synchronized GameStatus primaryFailed(int clientId, MoveDirection moveDirection)
 			throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+		// first time receiving notification
+		if (!primaryFailed) {
+			// choose a new backup
+			if (!this.chooseBackup()) {
+				// failed to choose backup
+				// maybe because all other clients have failed (in this case, game should end ...)
+				System.err.println("Failed to choose a backup server ... game should end ...");
+				return null;
+			}
+			
+			primaryFailed = true;
+			this.serverGameStatus.primaryServer = this;
+		}
+		
+		// TODO: broadcast to clients primary server has changed?
+		// or let clients figure it out in time? Assuming its 
+		// impossible for nodes to recover.
+		
+		// process move
+		return this.move(clientId, moveDirection);
 	}
 
+	/**
+	 * Primary server will call updateState on backup to update its game state
+	 * @return true to acknowledge
+	 */
 	@Override
 	public boolean updateState(GameStatus gameState) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+		this.serverGameStatus = gameState;
+		return true;
 	}
 }

@@ -52,6 +52,8 @@ public class GameStatus implements Serializable {
 	 */
 	public int[][] treasuresGrid;
 	
+	public IServer primaryServer;
+	
 	public IServer backupServer;
 	
 	public void print() {

@@ -1,14 +1,17 @@
 package server;
 
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
 
-import remoteInterface.GameStatus;
+import client.Client;
 import remoteInterface.IServer;
-import remoteInterface.MoveDirection;
 
+/**
+ * For part 2, since all clients implements AbstractServer, 
+ * this class represents the "main starting" server 
+ */
 public class Server extends AbstractServer {
 
 	public static void main(String args[]) {
@@ -16,8 +19,14 @@ public class Server extends AbstractServer {
 		Registry registry = null;
 
 		try {
-			Server server = new Server();
-			stub = (IServer) UnicastRemoteObject.exportObject(server, 0);
+			Client server = new Client();
+			try {
+				stub = (IServer) UnicastRemoteObject.exportObject(server, 0);
+			} catch (ExportException e) {
+				// likely here because its main server. Can skip exporting itself
+				stub = (IServer) UnicastRemoteObject.toStub(server);
+			}
+			
 			registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
 			registry.bind("Maze", stub);
 
