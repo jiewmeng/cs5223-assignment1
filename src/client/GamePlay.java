@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.util.Random;
 
 import remoteInterface.GameStatus;
-import remoteInterface.IPlayer;
 import remoteInterface.IServer;
 import remoteInterface.MoveDirection;
 
@@ -35,8 +34,8 @@ public class GamePlay implements Runnable {
 					break;
 				}
 				
-				System.out.println("DEBUG: primary server " + ((IPlayer)gameState.primaryServer).getId());
-				System.out.println("DEBUG: backup server " + ((IPlayer)gameState.backupServer).getId());
+				System.out.println("DEBUG: primary server " + gameState.primaryServer.getId());
+				System.out.println("DEBUG: backup server " + gameState.backupServer.getId());
 				
 				System.out
 						.println(gameState.players.get(this.id).totalTreasuresFound

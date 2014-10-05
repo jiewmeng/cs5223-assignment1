@@ -1,43 +1,84 @@
 package client;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
 
 import remoteInterface.GameStatus;
-import remoteInterface.IPlayer;
+import remoteInterface.IClient;
 import remoteInterface.IServer;
-import server.AbstractServer;
+import server.Server;
 
-public class Client extends AbstractServer implements IPlayer {
+public class Client extends Server implements IClient {
 
 	public int id;
-	public IServer iServer = null;
+	public IServer iServer = null; // remote server
+	public Server clientServer = new Server();	// client attached server
 
 	public Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
 	}
+	
+	public static void main(String args[]) throws RemoteException {
 
-	public static void main(String[] args) throws RemoteException {
+		Client client = new Client();
+		boolean isClientExist = false;
 
-		String host = (args.length < 1) ? null : args[0];
-		Client client;
-		try {
-			client = new Client();
-			Registry registry = LocateRegistry.getRegistry(host);
-			IServer stub = (IServer) registry.lookup("Maze");
-
-			client.id = stub.joinGame(client);
-			if (client.id == -1) {
-				System.out
-						.println("Server rejected client. Game has already started.");
-			} else {
-				client.iServer = stub;
-				System.out.println("Client connected with id " + client.id);
+		do {
+			try {
+				isClientExist = client.createClient(null);
+			} catch (RemoteException e) {
+				client.createClientServer(args);
+			} catch (NotBoundException e) {
+				e.printStackTrace();
 			}
+		} while (!isClientExist);
+
+	}
+
+	private boolean createClient(String host) throws RemoteException,
+			NotBoundException {
+
+		Registry registry = LocateRegistry.getRegistry(host);
+		IServer stub = (IServer) registry.lookup("Maze");
+
+		this.id = stub.joinGame(this);
+		this.clientServer.setId(this.id);
+		
+		if (this.id == -1) {
+			System.out
+					.println("Server rejected client. Game has already started.");
+		} else {
+			this.iServer = stub;
+			System.out.println("Client connected with id " + this.id);
+		}
+		return true;
+	}
+
+	private void createClientServer(String args[]) {
+
+		IServer stub = null;
+		Registry registry = null;
+		clientServer = new Server(args);
+
+		try {
+			try {
+				stub = (IServer) UnicastRemoteObject.exportObject(clientServer, 0);
+			} catch (ExportException e) {
+				// likely here because its main server. Can skip exporting
+				// itself
+				stub = (IServer) UnicastRemoteObject.toStub(clientServer);
+			}
+
+			registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+			registry.bind("Maze", stub);
+
+			System.err.println("Server ready");
 		} catch (Exception e) {
-			System.err.println("Client exception: " + e.toString());
+			System.err.println("Server exception: " + e.toString());
 			e.printStackTrace();
 		}
 	}
@@ -52,6 +93,11 @@ public class Client extends AbstractServer implements IPlayer {
 	@Override
 	public int getId() {
 		return this.id;
+	}
+	
+	@Override
+	public IServer getIServer() throws RemoteException {
+		return this.iServer;
 	}
 
 }
