@@ -26,7 +26,6 @@ public class Client extends AbstractServer implements IPlayer {
 		try {
 			client = new Client();
 			Registry registry = LocateRegistry.getRegistry(host);
-			System.out.println("Lookup maze");
 			IServer stub = (IServer) registry.lookup("Maze");
 
 			client.id = stub.joinGame(client);

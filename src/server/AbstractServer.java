@@ -14,9 +14,9 @@ import remoteInterface.Player;
 
 public abstract class AbstractServer implements IServer {
 	// TODO: Configure these
-	public static final int WAIT_FOR_PLAYERS_IN_SECONDS = 10;
-	public static final int DEFAULT_GRID_SIZE = 3;
-	public static final int DEFAULT_NUM_TREASURES = 4;
+	public static final int WAIT_FOR_PLAYERS_IN_SECONDS = 15;
+	public static final int DEFAULT_GRID_SIZE = 5;
+	public static final int DEFAULT_NUM_TREASURES = 10;
 
 	protected int nextId;
 	protected Vector<IPlayer> clients;
@@ -46,6 +46,8 @@ public abstract class AbstractServer implements IServer {
 	 * Init game state, start game
 	 */
 	protected void startGame() throws RemoteException {
+		
+		System.out.println("Start game");
 
 		// Init grid with treasures
 		this.serverGameStatus.treasuresGrid = Util.initTreasuresGrid(
@@ -61,17 +63,18 @@ public abstract class AbstractServer implements IServer {
 				this.serverGameStatus.gridSize, this.serverGameStatus.players);
 
 		// Print game status
+		this.serverGameStatus.primaryServer = this;
 		this.serverGameStatus.print();
-
-		// Assign treasures if they are at player's init position
-		for (Player p : this.serverGameStatus.players) {
-			this.move(p.id, MoveDirection.NO_MOVE);
-		}
 		
 		// choose a backup server
 		if (!this.chooseBackup()) {
 			System.err.println("Failed to choose a backup server");
 			return;
+		}
+
+		// Assign treasures if they are at player's init position
+		for (Player p : this.serverGameStatus.players) {
+			this.move(p.id, MoveDirection.NO_MOVE);
 		}
 
 		this.isGameStarted = true;
@@ -85,6 +88,7 @@ public abstract class AbstractServer implements IServer {
 	 * @throws RemoteException 
 	 */
 	private boolean chooseBackup() throws RemoteException {
+		System.out.println("Choosing backup. Clients length: " + this.clients.size());
 		boolean success = false;
 		IServer candidateServer;
 		IPlayer self = (IPlayer)this;
@@ -100,10 +104,20 @@ public abstract class AbstractServer implements IServer {
 			}
 			
 			try {
-				success = candidateServer.makeBackup(serverGameStatus);
+				success = candidateServer.makeBackup(serverGameStatus, this.clients);
 				if (!success) continue;
 				serverGameStatus.backupServer = candidateServer;
 				System.out.println("Choosing backup ... choose " + i + " as backup server.");
+				
+				// broadcast to inform clients of new backup
+//				for (IPlayer p : this.clients) {
+//					try {
+//						p.gameStateUpdate(serverGameStatus);
+//					} catch (RemoteException ee) {
+//						// perhaps client is down, do nothing
+//					}
+//				}
+				
 				return true;
 			} catch (RemoteException e) {
 				System.err.println("Choosing backup ... failed to make #" + i + " a backup server");
@@ -227,7 +241,15 @@ public abstract class AbstractServer implements IServer {
 		moveDirection.print();
 		this.serverGameStatus.print();
 		
-		//this.serverGameStatus.backupServer.updateState(this.serverGameStatus);
+		try {
+			this.serverGameStatus.backupServer.updateState(this.serverGameStatus, this.clients);
+		} catch (RemoteException e) {
+			// backup server failed ... choose a new one
+			if (!this.chooseBackup()) {
+				// unable to choose a new backup ... end game
+				return null;
+			}
+		}
 
 		return this.serverGameStatus;
 	}
@@ -238,8 +260,9 @@ public abstract class AbstractServer implements IServer {
 	 * @return true to acknowledge
 	 */
 	@Override
-	public boolean makeBackup(GameStatus gameState) throws RemoteException {
-		this.serverGameStatus = gameState;
+	public boolean makeBackup(GameStatus gameState, Vector<IPlayer> clients) throws RemoteException {
+		System.out.println("I am now backup server.");
+		this.updateState(gameState, clients);
 		return true;
 	}
 
@@ -263,6 +286,7 @@ public abstract class AbstractServer implements IServer {
 			}
 			
 			primaryFailed = true;
+			System.out.println("I am now primary server");
 			this.serverGameStatus.primaryServer = this;
 		}
 		
@@ -279,8 +303,9 @@ public abstract class AbstractServer implements IServer {
 	 * @return true to acknowledge
 	 */
 	@Override
-	public boolean updateState(GameStatus gameState) throws RemoteException {
+	public boolean updateState(GameStatus gameState, Vector<IPlayer> clients) throws RemoteException {
 		this.serverGameStatus = gameState;
+		this.clients = clients;
 		return true;
 	}
 }
