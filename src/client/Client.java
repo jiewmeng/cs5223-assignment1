@@ -1,6 +1,5 @@
 package client;
 
-import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -11,9 +10,8 @@ import remoteInterface.IPlayer;
 import remoteInterface.IServer;
 import server.AbstractServer;
 
-public class Client extends AbstractServer implements IPlayer, Serializable {
+public class Client extends AbstractServer implements IPlayer {
 
-	private static final long serialVersionUID = -7603873198996451630L;
 	public int id;
 	public IServer iServer = null;
 
