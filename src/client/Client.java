@@ -1,5 +1,6 @@
 package client;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -10,13 +11,13 @@ import remoteInterface.IClient;
 import remoteInterface.IServer;
 import server.AbstractServer;
 
-public class Client extends AbstractServer implements IClient {
+public class Client extends AbstractServer implements IClient, Serializable {
 
 	public int id;
 	public IServer iServer = null;
 
 	public Client() throws RemoteException {
-		UnicastRemoteObject.exportObject(this, 0);
+//		UnicastRemoteObject.exportObject(this, 0);
 	}
 
 	public static void main(String[] args) throws RemoteException {
