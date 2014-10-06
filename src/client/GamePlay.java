@@ -2,6 +2,7 @@ package client;
 
 import java.rmi.RemoteException;
 import java.util.Random;
+import java.util.Scanner;
 
 import remoteInterface.GameStatus;
 import remoteInterface.MoveDirection;
@@ -11,10 +12,12 @@ public class GamePlay implements Runnable {
 
 	public int id;
 	public GameStatus gameState;
+	protected Scanner in;
 
-	public GamePlay(int id, GameStatus initGameState) {
+	public GamePlay(int id, GameStatus initGameState, Scanner in) {
 		this.id = id;
 		this.gameState = initGameState;
+		this.in = in;
 	}
 
 	@Override
@@ -48,11 +51,11 @@ public class GamePlay implements Runnable {
 			}
 
 			// Give a random delay
-			try {
-				Thread.sleep(randInt(rand, 4000, 5000));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+//			try {
+//				Thread.sleep(randInt(rand, 4000, 5000));
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
 
 		} while (this.gameState != null && this.gameState.backupServer != null && this.gameState.numTreasuresLeft > 0);
 
@@ -64,7 +67,26 @@ public class GamePlay implements Runnable {
 	}
 
 	private void move() throws RemoteException {
-		MoveDirection moveDirection = MoveDirection.getRandDir();
+		MoveDirection moveDirection;
+		// moveDirection = MoveDirection.getRandDir();
+
+		System.out.println("Enter move direction (N, S, E, W, NoMove): ");
+		String dirStr = in.nextLine();
+		if (dirStr.equalsIgnoreCase("N")) {
+			moveDirection = MoveDirection.N;
+		} else if (dirStr.equalsIgnoreCase("S")) {
+			moveDirection = MoveDirection.S;
+		} else if (dirStr.equalsIgnoreCase("E")) {
+			moveDirection = MoveDirection.E;
+		} else if (dirStr.equalsIgnoreCase("W")) {
+			moveDirection = MoveDirection.W;
+		} else if (dirStr.equalsIgnoreCase("NoMove")) {
+			moveDirection = MoveDirection.NO_MOVE;
+		} else {
+			System.out.println("Invalid move direction. ");
+			return;
+		}
+		
 		moveDirection.print();
 		try {
 			this.gameState = this.gameState.primaryServer.move(this.id, moveDirection);

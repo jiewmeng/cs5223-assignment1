@@ -6,6 +6,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Scanner;
 
 import remoteInterface.GameStatus;
 import remoteInterface.IClient;
@@ -18,8 +19,10 @@ public class Client implements IClient {
 	public IServer iServer = null; // remote server
 	private Server clientServer = new Server(); // client attached server
 	public GamePlay gamePlay;
+	public Scanner in;
 
 	public Client() throws RemoteException {
+		this.in = new Scanner(System.in);
 		UnicastRemoteObject.exportObject(this, 0);
 	}
 
@@ -56,7 +59,7 @@ public class Client implements IClient {
 		} else {
 			this.iServer = stub;
 			this.clientServer.setId(this.id);
-			this.gamePlay = new GamePlay(this.id, new GameStatus());
+			this.gamePlay = new GamePlay(this.id, new GameStatus(), this.in);
 			System.out.println("Client connected with id " + this.id);
 		}
 	}
