@@ -17,7 +17,7 @@ public class Client implements IClient {
 	public int id;
 	public IServer iServer = null; // remote server
 	private Server clientServer = new Server(); // client attached server
-	public GamePlay gamePlay = new GamePlay(this.id, new GameStatus());
+	public GamePlay gamePlay;
 
 	public Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
@@ -56,6 +56,7 @@ public class Client implements IClient {
 		} else {
 			this.iServer = stub;
 			this.clientServer.setId(this.id);
+			this.gamePlay = new GamePlay(this.id, new GameStatus());
 			System.out.println("Client connected with id " + this.id);
 		}
 	}
