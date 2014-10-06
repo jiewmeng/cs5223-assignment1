@@ -17,7 +17,7 @@ public class Client implements IClient {
 	public int id;
 	public IServer iServer = null; // remote server
 	private Server clientServer = new Server(); // client attached server
-	public GameStatus gameState;
+	public GamePlay gamePlay = new GamePlay(this.id, new GameStatus());
 
 	public Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
@@ -86,9 +86,9 @@ public class Client implements IClient {
 	}
 
 	@Override
-	public void startGame(GameStatus initGameStatus) throws RemoteException {
-		this.gameState = initGameStatus;
-		Thread t = new Thread(new GamePlay(this.id, this));
+	public void startGame(GameStatus initGameState) throws RemoteException {
+		this.gamePlay.setGameState(initGameState);
+		Thread t = new Thread(this.gamePlay);
 		t.start();
 	}
 
@@ -110,10 +110,7 @@ public class Client implements IClient {
 
 	@Override
 	public void updateGameState(GameStatus gameState) throws RemoteException {
-		this.gameState = gameState;
-		System.out.println("DEBUG: Updated client gameState. Primary #"
-				+ this.gameState.primaryServer.getId() + ". Backup #"
-				+ this.gameState.backupServer.getId());
+		this.gamePlay.setGameState(gameState);
 	}
 
 }

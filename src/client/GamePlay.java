@@ -3,17 +3,18 @@ package client;
 import java.rmi.RemoteException;
 import java.util.Random;
 
+import remoteInterface.GameStatus;
 import remoteInterface.MoveDirection;
 import remoteInterface.Player;
 
 public class GamePlay implements Runnable {
 
 	public int id;
-	public Client client;
+	public GameStatus gameState;
 
-	public GamePlay(int id, Client client) {
+	public GamePlay(int id, GameStatus initGameState) {
 		this.id = id;
-		this.client = client;
+		this.gameState = initGameState;
 	}
 
 	@Override
@@ -22,26 +23,26 @@ public class GamePlay implements Runnable {
 		Random rand = new Random();
 
 		System.out.println("Game initializing...");
-		client.gameState.print();
+		this.gameState.print();
 		System.out.println("Game starts...");
 		
 		do {
 			try {
 				this.move();
-				if (client.gameState.backupServer == null) {
+				if (this.gameState.backupServer == null) {
 					// eg. when no backup server anymore
 					break;
 				}
 				
-				System.out.println("DEBUG: primary server " + client.gameState.primaryServer.getId() + ". " + (id == client.gameState.primaryServer.getId() ? "Me" : ""));
-				System.out.println("DEBUG: backup server " + client.gameState.backupServer.getId() + ". " + (id == client.gameState.backupServer.getId() ? "Me" : ""));
+				System.out.println("DEBUG: primary server " + this.gameState.primaryServer.getId() + ". " + (id == this.gameState.primaryServer.getId() ? "Me" : ""));
+				System.out.println("DEBUG: backup server " + this.gameState.backupServer.getId() + ". " + (id == this.gameState.backupServer.getId() ? "Me" : ""));
 				
 				System.out
-						.println(client.gameState.players.get(this.id).totalTreasuresFound
+						.println(this.gameState.players.get(this.id).totalTreasuresFound
 								+ " treasures collected");
-				client.gameState.print();
+				this.gameState.print();
 			} catch (RemoteException e) {
-				e.printStackTrace();
+//				e.printStackTrace();
 			}
 
 			// Give a random delay
@@ -51,13 +52,12 @@ public class GamePlay implements Runnable {
 				e.printStackTrace();
 			}
 
-		} while (client.gameState != null && client.gameState.backupServer != null && client.gameState.numTreasuresLeft > 0);
+		} while (this.gameState != null && this.gameState.backupServer != null && this.gameState.numTreasuresLeft > 0);
 
 		System.out.println("====== GAME ENDS ======");
-		for (Player p : client.gameState.players) {
+		for (Player p : this.gameState.players) {
 			System.out.println("Player #" + p.id + " : " + p.totalTreasuresFound);
 		}
-		
 		
 	}
 
@@ -65,10 +65,10 @@ public class GamePlay implements Runnable {
 		MoveDirection moveDirection = MoveDirection.getRandDir();
 		moveDirection.print();
 		try {
-			this.client.gameState = this.client.gameState.primaryServer.move(this.id, moveDirection);
+			this.gameState = this.gameState.primaryServer.move(this.id, moveDirection);
 		} catch (RemoteException e) {
 			try {
-				this.client.gameState = this.client.gameState.backupServer.primaryFailed(this.id, moveDirection);
+				this.gameState = this.gameState.backupServer.primaryFailed(this.id, moveDirection);
 			} catch (RemoteException ee) {
 				return;
 			}
@@ -77,5 +77,17 @@ public class GamePlay implements Runnable {
 	
 	private static int randInt(Random rand, int min, int max) {
 		return rand.nextInt((max - min) + 1) + min;
+	}
+
+	public void setGameState(GameStatus gameState) {
+		this.gameState = gameState;
+		
+		try {
+			System.out.println("DEBUG: Updated client gameState. Primary #"
+					+ this.gameState.primaryServer.getId() + ". Backup #"
+					+ this.gameState.backupServer.getId());
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 	}
 }
