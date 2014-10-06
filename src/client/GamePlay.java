@@ -28,7 +28,7 @@ public class GamePlay implements Runnable {
 		do {
 			try {
 				this.move();
-				if (client.gameState == null) {
+				if (client.gameState.backupServer == null) {
 					// eg. when no backup server anymore
 					break;
 				}
@@ -51,7 +51,7 @@ public class GamePlay implements Runnable {
 				e.printStackTrace();
 			}
 
-		} while (client.gameState != null && client.gameState.numTreasuresLeft > 0);
+		} while (client.gameState != null && client.gameState.backupServer != null && client.gameState.numTreasuresLeft > 0);
 
 		System.out.println("====== GAME ENDS ======");
 		for (Player p : client.gameState.players) {
@@ -70,7 +70,6 @@ public class GamePlay implements Runnable {
 			try {
 				this.client.gameState = this.client.gameState.backupServer.primaryFailed(this.id, moveDirection);
 			} catch (RemoteException ee) {
-				this.client.gameState = null;
 				return;
 			}
 		}

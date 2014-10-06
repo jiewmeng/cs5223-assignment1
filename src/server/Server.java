@@ -135,6 +135,7 @@ public class Server implements IServer {
 				System.err.println("Choosing backup ... failed to make #" + i + " a backup server");
 			}
 		}
+		serverGameStatus.backupServer = null;
 		System.err.println("Choosing backup ... failed to choose a backup server");
 		return false;
 	}
@@ -257,10 +258,7 @@ public class Server implements IServer {
 			this.serverGameStatus.backupServer.updateState(this.serverGameStatus, this.clients);
 		} catch (RemoteException e) {
 			// backup server failed ... choose a new one
-			if (!this.chooseBackup()) {
-				// unable to choose a new backup ... end game
-				return null;
-			}
+			this.chooseBackup();
 		}
 
 		return this.serverGameStatus;
@@ -295,7 +293,7 @@ public class Server implements IServer {
 				// failed to choose backup
 				// maybe because all other clients have failed (in this case, game should end ...)
 				System.err.println("Failed to choose a backup server ... game should end ...");
-				return null;
+				return serverGameStatus;
 			}
 			
 			primaryFailed = true;
