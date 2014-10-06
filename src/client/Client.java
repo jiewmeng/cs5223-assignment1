@@ -15,6 +15,8 @@ import server.Server;
 
 public class Client implements IClient {
 
+	private static final String HOST = null;
+	
 	public int id;
 	public IServer iServer = null; // remote server
 	private Server clientServer = new Server(); // client attached server
@@ -31,11 +33,11 @@ public class Client implements IClient {
 		Client client = new Client();
 
 		try {
-			client.createClient(null);
+			client.createClient(HOST);
 		} catch (RemoteException e) {
 			client.createClientServer(args);
 			try {
-				client.createClient(null);
+				client.createClient(HOST);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
