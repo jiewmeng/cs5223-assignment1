@@ -1,0 +1,53 @@
+
+Fill in the info and submit the softcopy together with your source code.
+
+------------------------------------------------------------
+
+What is your demo time slot (e.g., 14:30PM)? Answer: 
+
+What programming language did you use? Answer: Java
+
+Roughly how many lines of code does your system have? Answer: ~1000 (using git-fame)
+
+Do you use RMI or socket for your system? Answer (RMI/socket): RMI
+
+-------------------------------------------------------------
+
+What is Team Member 1's matriculation number (not nusnetid!)? 
+
+Answer: A0040740W
+
+What is Team Member 1's name (exactly as appeared as on IVLE)?
+
+Answer: LU FANGJIAN
+
+How many lines of code did Team Member 1 write for this assignment?
+
+Answer: 537
+
+Which part of the assignment did Team Member 1 do?
+
+Answer: Client
+
+
+-------------------------------------------------------------
+
+What is Team Member 2's matriculation number (not nusnetid!)?
+
+Answer: A0087884H
+
+What is Team Member 2's name (exactly as appeared as on IVLE)?
+
+Answer: LIM JIEW MENG
+
+How many lines of code did Team Member 2 write for this assignment?
+
+Answer: 445
+
+Which part of the assignment did Team Member 2 do?
+
+Answer: Server
+
+
+--------------------------------------------------------------
+

@@ -1,12 +1,8 @@
-package server;
+
 
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Vector;
-
-import remoteInterface.Coordinates;
-import remoteInterface.IClient;
-import remoteInterface.Player;
 
 public class Util {
 

@@ -1,4 +1,4 @@
-package client;
+
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -7,11 +7,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
-
-import remoteInterface.GameStatus;
-import remoteInterface.IClient;
-import remoteInterface.IServer;
-import server.Server;
 
 public class Client implements IClient {
 

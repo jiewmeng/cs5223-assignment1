@@ -1,16 +1,9 @@
-package server;
+
 
 import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
-
-import remoteInterface.Coordinates;
-import remoteInterface.GameStatus;
-import remoteInterface.IClient;
-import remoteInterface.IServer;
-import remoteInterface.MoveDirection;
-import remoteInterface.Player;
 
 public class Server implements IServer {
 	// TODO: Configure these
@@ -264,7 +257,10 @@ public class Server implements IServer {
 
 		if (this.id == this.serverGameStatus.primaryServer.getId()) {
 			try {
-				this.serverGameStatus.backupServer
+				if (this.serverGameStatus.backupServer == null) {
+					return this.serverGameStatus;
+				}
+				this.serverGameStatus.backupServer 
 						.move(clientId, moveDirection);
 			} catch (RemoteException e) {
 				// backup server failed ... choose a new one
@@ -320,6 +316,9 @@ public class Server implements IServer {
 	}
 	
 	public void initPingBackup() {
+		if (pingTimer != null) {
+			pingTimer.cancel();
+		}
 		pingTimer = new Timer();
 		pingTimer.scheduleAtFixedRate(new PingBackupServerTimer(this,
 				this.serverGameStatus.backupServer),

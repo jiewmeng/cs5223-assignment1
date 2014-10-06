@@ -1,11 +1,7 @@
-package client;
+
 
 import java.rmi.RemoteException;
 import java.util.Scanner;
-
-import remoteInterface.GameStatus;
-import remoteInterface.MoveDirection;
-import remoteInterface.Player;
 
 public class GamePlay implements Runnable {
 
@@ -55,13 +51,6 @@ public class GamePlay implements Runnable {
 				// e.printStackTrace();
 			}
 
-			// Give a random delay
-			// try {
-			// Thread.sleep(randInt(rand, 4000, 5000));
-			// } catch (InterruptedException e) {
-			// e.printStackTrace();
-			// }
-
 		} while (this.gameState != null && this.gameState.backupServer != null
 				&& this.gameState.numTreasuresLeft > 0);
 
@@ -103,6 +92,9 @@ public class GamePlay implements Runnable {
 					moveDirection);
 		} catch (RemoteException e) {
 			try {
+				if (this.gameState.backupServer == null) {
+					return;
+				}
 				this.gameState = this.gameState.backupServer.primaryFailed(
 						this.id, moveDirection);
 			} catch (RemoteException ee) {
