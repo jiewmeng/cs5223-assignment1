@@ -23,6 +23,7 @@ public class Server implements IServer {
 	protected Vector<IClient> clients;
 	protected GameStatus serverGameStatus;
 	protected boolean primaryFailed = false;
+	protected boolean hasMakeBackup = false;
 
 	public Server() {
 		this.nextId = 0;
@@ -255,7 +256,7 @@ public class Server implements IServer {
 		this.serverGameStatus.print();
 		
 		try {
-			this.serverGameStatus.backupServer.updateState(this.serverGameStatus, this.clients);
+			this.serverGameStatus.backupServer.move(clientId, moveDirection);
 		} catch (RemoteException e) {
 			// backup server failed ... choose a new one
 			this.chooseBackup();
@@ -266,14 +267,21 @@ public class Server implements IServer {
 	
 	/**
 	 * Promotes a normal client to a backup server
+	 * Only allowed to call once when making backup server
 	 * 
 	 * @return true to acknowledge
 	 */
 	@Override
 	public boolean makeBackup(GameStatus gameState, Vector<IClient> clients) throws RemoteException {
-		System.out.println("I am now backup server.");
-		this.updateState(gameState, clients);
-		return true;
+		
+		if (!this.hasMakeBackup) {
+			System.out.println("I am now backup server.");
+			this.hasMakeBackup = true;
+			this.serverGameStatus = gameState;
+			this.clients = clients;
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -308,14 +316,4 @@ public class Server implements IServer {
 		return this.move(clientId, moveDirection);
 	}
 
-	/**
-	 * Primary server will call updateState on backup to update its game state
-	 * @return true to acknowledge
-	 */
-	@Override
-	public boolean updateState(GameStatus gameState, Vector<IClient> clients) throws RemoteException {
-		this.serverGameStatus = gameState;
-		this.clients = clients;
-		return true;
-	}
 }
