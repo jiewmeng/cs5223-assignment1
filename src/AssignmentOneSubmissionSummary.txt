@@ -23,7 +23,7 @@ Answer: LU FANGJIAN
 
 How many lines of code did Team Member 1 write for this assignment?
 
-Answer: 537
+Answer: 537 (using git-fame)
 
 Which part of the assignment did Team Member 1 do?
 
@@ -42,7 +42,7 @@ Answer: LIM JIEW MENG
 
 How many lines of code did Team Member 2 write for this assignment?
 
-Answer: 445
+Answer: 445 (using git-fame)
 
 Which part of the assignment did Team Member 2 do?
 
