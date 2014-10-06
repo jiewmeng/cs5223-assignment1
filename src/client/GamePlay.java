@@ -28,26 +28,28 @@ public class GamePlay implements Runnable {
 		
 		do {
 			try {
-				this.move();
-				if (this.gameState.backupServer == null) {
-					// eg. when no backup server anymore
-					break;
+				synchronized(this) {
+					this.move();
+					if (this.gameState.backupServer == null) {
+						// eg. when no backup server anymore
+						break;
+					}
+					
+					System.out.println("DEBUG: primary server " + this.gameState.primaryServer.getId() + ". " + (id == this.gameState.primaryServer.getId() ? "Me" : ""));
+					System.out.println("DEBUG: backup server " + this.gameState.backupServer.getId() + ". " + (id == this.gameState.backupServer.getId() ? "Me" : ""));
+					
+					System.out
+							.println(this.gameState.players.get(this.id).totalTreasuresFound
+									+ " treasures collected");
+					this.gameState.print();
 				}
-				
-				System.out.println("DEBUG: primary server " + this.gameState.primaryServer.getId() + ". " + (id == this.gameState.primaryServer.getId() ? "Me" : ""));
-				System.out.println("DEBUG: backup server " + this.gameState.backupServer.getId() + ". " + (id == this.gameState.backupServer.getId() ? "Me" : ""));
-				
-				System.out
-						.println(this.gameState.players.get(this.id).totalTreasuresFound
-								+ " treasures collected");
-				this.gameState.print();
 			} catch (RemoteException e) {
 //				e.printStackTrace();
 			}
 
 			// Give a random delay
 			try {
-				Thread.sleep(randInt(rand, 200, 3000));
+				Thread.sleep(randInt(rand, 4000, 5000));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

@@ -58,7 +58,7 @@ public class GameStatus implements Serializable {
 	
 	public boolean isGameStarted = false;
 	
-	public void print() {
+	public synchronized void print() {
 		System.out.println("////////");
 		System.out.println(numTreasuresLeft + " treasures left");
 		printTreasuresGrid();

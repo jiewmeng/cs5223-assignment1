@@ -255,11 +255,13 @@ public class Server implements IServer {
 		moveDirection.print();
 		this.serverGameStatus.print();
 		
-		try {
-			this.serverGameStatus.backupServer.move(clientId, moveDirection);
-		} catch (RemoteException e) {
-			// backup server failed ... choose a new one
-			this.chooseBackup();
+		if (this.id == this.serverGameStatus.primaryServer.getId()) {
+			try {
+				this.serverGameStatus.backupServer.move(clientId, moveDirection);
+			} catch (RemoteException e) {
+				// backup server failed ... choose a new one
+				this.chooseBackup();
+			}
 		}
 
 		return this.serverGameStatus;
