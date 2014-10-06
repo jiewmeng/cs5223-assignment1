@@ -12,11 +12,11 @@ import remoteInterface.IClient;
 import remoteInterface.IServer;
 import server.Server;
 
-public class Client extends Server implements IClient {
+public class Client implements IClient {
 
 	public int id;
 	public IServer iServer = null; // remote server
-	public Server clientServer = new Server();	// client attached server
+	private Server clientServer = new Server();	// client attached server
 
 	public Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
@@ -25,21 +25,23 @@ public class Client extends Server implements IClient {
 	public static void main(String args[]) throws RemoteException {
 
 		Client client = new Client();
-		boolean isClientExist = false;
 
-		do {
+		try {
+			client.createClient(null);
+		} catch (RemoteException e) {
+			client.createClientServer(args);
 			try {
-				isClientExist = client.createClient(null);
-			} catch (RemoteException e) {
-				client.createClientServer(args);
-			} catch (NotBoundException e) {
-				e.printStackTrace();
+				client.createClient(null);
+			} catch (Exception e1) {
+				e1.printStackTrace();
 			}
-		} while (!isClientExist);
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
 
 	}
 
-	private boolean createClient(String host) throws RemoteException,
+	private void createClient(String host) throws RemoteException,
 			NotBoundException {
 
 		Registry registry = LocateRegistry.getRegistry(host);
@@ -55,7 +57,6 @@ public class Client extends Server implements IClient {
 			this.clientServer.setId(this.id);
 			System.out.println("Client connected with id " + this.id);
 		}
-		return true;
 	}
 
 	private void createClientServer(String args[]) {
