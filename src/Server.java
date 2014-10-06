@@ -7,7 +7,7 @@ import java.util.Vector;
 
 public class Server implements IServer {
 	// TODO: Configure these
-	public static final int WAIT_FOR_PLAYERS_IN_SECONDS = 15;
+	public static final int WAIT_FOR_PLAYERS_IN_SECONDS = 20;
 	public static final int DEFAULT_GRID_SIZE = 5;
 	public static final int DEFAULT_NUM_TREASURES = 10;
 	public static final int PING_TIMER_IN_SECONDS = 10; // ping between primary
