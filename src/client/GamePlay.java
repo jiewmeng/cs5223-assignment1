@@ -61,6 +61,9 @@ public class GamePlay implements Runnable {
 			System.out.println("Player #" + p.id + " : " + p.totalTreasuresFound);
 		}
 		
+		// Terminate gamePlay and client
+		System.exit(0);
+		
 	}
 
 	private void move() throws RemoteException {
