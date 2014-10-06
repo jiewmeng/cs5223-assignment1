@@ -16,12 +16,13 @@ public class Client extends Server implements IClient {
 
 	public int id;
 	public IServer iServer = null; // remote server
-	public Server clientServer = new Server();	// client attached server
+	public Server clientServer = new Server(); // client attached server
+	public GameStatus gameState;
 
 	public Client() throws RemoteException {
 		UnicastRemoteObject.exportObject(this, 0);
 	}
-	
+
 	public static void main(String args[]) throws RemoteException {
 
 		Client client = new Client();
@@ -46,7 +47,7 @@ public class Client extends Server implements IClient {
 		IServer stub = (IServer) registry.lookup("Maze");
 
 		this.id = stub.joinGame(this);
-		
+
 		if (this.id == -1) {
 			System.out
 					.println("Server rejected client. Game has already started.");
@@ -66,7 +67,8 @@ public class Client extends Server implements IClient {
 		clientServer.initGridParam(args);
 		try {
 			try {
-				stub = (IServer) UnicastRemoteObject.exportObject(clientServer, 0);
+				stub = (IServer) UnicastRemoteObject.exportObject(clientServer,
+						0);
 			} catch (ExportException e) {
 				// likely here because its main server. Can skip exporting
 				// itself
@@ -85,8 +87,8 @@ public class Client extends Server implements IClient {
 
 	@Override
 	public void startGame(GameStatus initGameStatus) throws RemoteException {
-		
-		Thread t = new Thread(new GamePlay(this.id, this.iServer, initGameStatus));
+		this.gameState = initGameStatus;
+		Thread t = new Thread(new GamePlay(this.id, this));
 		t.start();
 	}
 
@@ -94,7 +96,7 @@ public class Client extends Server implements IClient {
 	public int getId() {
 		return this.id;
 	}
-	
+
 	@Override
 	public IServer getIClientServer() throws RemoteException {
 		IServer stub = null;
@@ -104,6 +106,14 @@ public class Client extends Server implements IClient {
 			stub = (IServer) UnicastRemoteObject.toStub(clientServer);
 		}
 		return stub;
+	}
+
+	@Override
+	public void updateGameState(GameStatus gameState) throws RemoteException {
+		this.gameState = gameState;
+		System.out.println("DEBUG: Updated client gameState. Primary #"
+				+ this.gameState.primaryServer.getId() + ". Backup #"
+				+ this.gameState.backupServer.getId());
 	}
 
 }

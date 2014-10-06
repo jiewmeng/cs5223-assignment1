@@ -122,13 +122,13 @@ public class Server implements IServer {
 				System.out.println("Choosing backup ... choose " + i + " as backup server.");
 				
 				// broadcast to inform clients of new backup
-//				for (IPlayer p : this.clients) {
-//					try {
-//						p.gameStateUpdate(serverGameStatus);
-//					} catch (RemoteException ee) {
-//						// perhaps client is down, do nothing
-//					}
-//				}
+				for (IClient p : this.clients) {
+					try {
+						p.updateGameState(serverGameStatus);
+					} catch (RemoteException ee) {
+						// perhaps client is down, do nothing
+					}
+				}
 				
 				return true;
 			} catch (RemoteException e) {
@@ -289,6 +289,7 @@ public class Server implements IServer {
 			throws RemoteException {
 		// first time receiving notification
 		if (!primaryFailed) {
+			this.serverGameStatus.primaryServer = this;
 			// choose a new backup
 			if (!this.chooseBackup()) {
 				// failed to choose backup
@@ -299,7 +300,6 @@ public class Server implements IServer {
 			
 			primaryFailed = true;
 			System.out.println("I am now primary server");
-			this.serverGameStatus.primaryServer = this;
 		}
 		
 		// TODO: broadcast to clients primary server has changed?
