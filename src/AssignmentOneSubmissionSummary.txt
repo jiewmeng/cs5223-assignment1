@@ -3,7 +3,7 @@ Fill in the info and submit the softcopy together with your source code.
 
 ------------------------------------------------------------
 
-What is your demo time slot (e.g., 14:30PM)? Answer: 
+What is your demo time slot (e.g., 14:30PM)? Answer: 11:30 AM
 
 What programming language did you use? Answer: Java
 
