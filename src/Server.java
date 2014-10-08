@@ -1,5 +1,3 @@
-
-
 import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -18,7 +16,7 @@ public class Server implements IServer {
 	protected Vector<IClient> clients;
 	protected GameStatus serverGameStatus;
 	protected boolean primaryFailed = false;
-	protected boolean hasMakeBackup = false;
+	protected boolean isBackup = false;
 	protected Timer pingTimer;
 
 	public Server() {
@@ -27,6 +25,7 @@ public class Server implements IServer {
 		this.serverGameStatus = new GameStatus();
 	}
 
+	@Override
 	public int getId() {
 		return id;
 	}
@@ -35,7 +34,7 @@ public class Server implements IServer {
 		this.id = id;
 	}
 
-	public void initGridParam(String[] args) {
+	protected void initGridParam(String[] args) {
 		if (args.length >= 2) {
 			this.serverGameStatus.gridSize = Integer.parseInt(args[0]);
 			this.serverGameStatus.numTreasures = Integer.parseInt(args[1]);
@@ -49,7 +48,7 @@ public class Server implements IServer {
 	/**
 	 * Init game state, start game
 	 */
-	protected void startGame() throws RemoteException {
+	private void startGame() throws RemoteException {
 
 		System.out.println("Start game");
 
@@ -71,10 +70,7 @@ public class Server implements IServer {
 		this.serverGameStatus.print();
 
 		// choose a backup server
-		if (!this.chooseBackup()) {
-			System.err.println("Failed to choose a backup server");
-			return;
-		}
+		this.chooseBackup();
 
 		// Assign treasures if they are at player's init position
 		for (Player p : this.serverGameStatus.players) {
@@ -92,7 +88,7 @@ public class Server implements IServer {
 	 * @return true if successfully choose a backup server
 	 * @throws RemoteException
 	 */
-	public boolean chooseBackup() throws RemoteException {
+	private void chooseBackup() throws RemoteException {
 		System.out.println("Choosing backup. Clients length: "
 				+ this.clients.size());
 		boolean success = false;
@@ -131,23 +127,29 @@ public class Server implements IServer {
 						// perhaps client is down, do nothing
 					}
 				}
-				
+
 				// init ping backup
 				this.initPingBackup();
 
-				return true;
+				return;
 			} catch (RemoteException e) {
 				System.err.println("Choosing backup ... failed to make #" + i
 						+ " a backup server");
 			}
 		}
-		serverGameStatus.backupServer = null;
-		System.err
-				.println("Choosing backup ... failed to choose a backup server");
-		return false;
+
+		synchronized (this) {
+			System.out
+					.println("Choosing backup ... failed to choose a backup server");
+
+			// Only client of itself left, inform to terminate
+			serverGameStatus.backupServer = null;
+			this.clients.get(this.id).updateGameState(serverGameStatus);
+		}
+
 	}
 
-	protected void announceStartGame(GameStatus initGameStatus)
+	private void announceStartGame(GameStatus initGameStatus)
 			throws RemoteException {
 		for (IClient client : this.clients) {
 			client.startGame(initGameStatus);
@@ -256,15 +258,31 @@ public class Server implements IServer {
 		this.serverGameStatus.print();
 
 		if (this.id == this.serverGameStatus.primaryServer.getId()) {
-			try {
-				if (this.serverGameStatus.backupServer == null) {
-					return this.serverGameStatus;
+
+			// broadcast end game status
+			if (this.serverGameStatus.numTreasuresLeft <= 0) {
+				for (int i = this.clients.size() - 1; i >= 0; i--) {
+					// broadcast in reverse order so that self is the last one
+					// to kill
+					try {
+						this.clients.get(i).updateGameState(serverGameStatus);
+					} catch (RemoteException ee) {
+						// perhaps client is down, do nothing
+					}
 				}
-				this.serverGameStatus.backupServer 
-						.move(clientId, moveDirection);
-			} catch (RemoteException e) {
-				// backup server failed ... choose a new one
-				this.chooseBackup();
+
+			} else {
+				// update backup
+				try {
+					if (this.serverGameStatus.backupServer == null) {
+						return this.serverGameStatus;
+					}
+					this.serverGameStatus.backupServer.move(clientId,
+							moveDirection);
+				} catch (RemoteException e) {
+					// backup server failed ... choose a new one
+					this.chooseBackup();
+				}
 			}
 		}
 
@@ -281,9 +299,9 @@ public class Server implements IServer {
 	public boolean makeBackup(GameStatus gameState, Vector<IClient> clients)
 			throws RemoteException {
 
-		if (!this.hasMakeBackup) {
+		if (!this.isBackup) {
 			System.out.println("I am now backup server.");
-			this.hasMakeBackup = true;
+			this.isBackup = true;
 			this.serverGameStatus = gameState;
 			this.clients = clients;
 			this.initPingPrimary();
@@ -308,30 +326,28 @@ public class Server implements IServer {
 		return this.move(clientId, moveDirection);
 	}
 
-	public void initPingPrimary() {
+	private void initPingPrimary() {
 		pingTimer = new Timer();
-		pingTimer.scheduleAtFixedRate(new PingPrimaryServerTimer(this,
+		pingTimer.scheduleAtFixedRate(new PingPrimaryServerTimer(
 				this.serverGameStatus.primaryServer),
 				PING_TIMER_IN_SECONDS * 1000, PING_TIMER_IN_SECONDS * 1000);
 	}
-	
-	public void initPingBackup() {
+
+	private void initPingBackup() {
 		if (pingTimer != null) {
 			pingTimer.cancel();
 		}
 		pingTimer = new Timer();
-		pingTimer.scheduleAtFixedRate(new PingBackupServerTimer(this,
+		pingTimer.scheduleAtFixedRate(new PingBackupServerTimer(
 				this.serverGameStatus.backupServer),
 				PING_TIMER_IN_SECONDS * 1000, PING_TIMER_IN_SECONDS * 1000);
 	}
 
-	class PingPrimaryServerTimer extends TimerTask {
+	private class PingPrimaryServerTimer extends TimerTask {
 
-		protected IServer self;
 		protected IServer primary;
 
-		public PingPrimaryServerTimer(IServer self, IServer primary) {
-			this.self = self;
+		public PingPrimaryServerTimer(IServer primary) {
 			this.primary = primary;
 		}
 
@@ -342,24 +358,24 @@ public class Server implements IServer {
 				this.primary.getId();
 			} catch (RemoteException e) {
 				try {
-					System.out.println("Primary server non-responsive ... make myself primary");
-					this.self.primaryFailed();
+					System.out
+							.println("Primary server non-responsive ... make myself primary");
+					primaryFailed();
 				} catch (RemoteException e1) {
-					System.err.println("Primary server non-responsive ... failed to make myself primary");
+					System.err
+							.println("Primary server non-responsive ... failed to make myself primary");
 					e1.printStackTrace();
 				}
 			}
 		}
 
 	}
-	
-	class PingBackupServerTimer extends TimerTask {
 
-		protected IServer self;
+	private class PingBackupServerTimer extends TimerTask {
+
 		protected IServer backup;
 
-		public PingBackupServerTimer(IServer self, IServer backup) {
-			this.self = self;
+		public PingBackupServerTimer(IServer backup) {
 			this.backup = backup;
 		}
 
@@ -370,36 +386,39 @@ public class Server implements IServer {
 				this.backup.getId();
 			} catch (RemoteException e) {
 				try {
-					System.out.println("Backup server non-responsive ... choosing a new backup");
-					this.self.chooseBackup();
+					System.out
+							.println("Backup server non-responsive ... choosing a new backup");
+					chooseBackup();
 				} catch (RemoteException e1) {
-					System.err.println("Failed to choose a new backup after old backup failed");
+					System.err
+							.println("Failed to choose a new backup after old backup failed");
 				}
 			}
 		}
 
 	}
 
-	@Override
-	public GameStatus primaryFailed() throws RemoteException {
-		// first time receiving notification
-		if (!primaryFailed) {
-			this.serverGameStatus.primaryServer = this;
+	private GameStatus primaryFailed() throws RemoteException {
+		
+		try {
+			// verify
+			this.serverGameStatus.primaryServer.getId();
 			
-			// stop pinging old primary server
-			this.pingTimer.cancel();
-			
-			// choose a new backup
-			if (!this.chooseBackup()) {
-				// failed to choose backup
-				// maybe because all other clients have failed (in this case,
-				// game should end ...)
-				System.err
-						.println("Failed to choose a backup server ... game should end ...");
+		} catch (RemoteException e) {
+		
+			// first time receiving notification
+			if (!primaryFailed && isBackup) {
+				this.serverGameStatus.primaryServer = this;
+	
+				// stop pinging old primary server
+				this.pingTimer.cancel();
+	
+				// choose a new backup
+				this.chooseBackup();
+	
+				primaryFailed = true;
+				System.out.println("I am now primary server");
 			}
-
-			primaryFailed = true;
-			System.out.println("I am now primary server");
 		}
 		return serverGameStatus;
 	}

@@ -54,15 +54,6 @@ public class GamePlay implements Runnable {
 		} while (this.gameState != null && this.gameState.backupServer != null
 				&& this.gameState.numTreasuresLeft > 0);
 
-		System.out.println("====== GAME ENDS ======");
-		for (Player p : this.gameState.players) {
-			System.out.println("Player #" + p.id + " : "
-					+ p.totalTreasuresFound);
-		}
-
-		// Terminate gamePlay and client
-		System.exit(0);
-
 	}
 
 	private void move() throws RemoteException {
@@ -105,6 +96,16 @@ public class GamePlay implements Runnable {
 
 	public void setGameState(GameStatus gameState) {
 		this.gameState = gameState;
+		
+		if (gameState != null && (gameState.numTreasuresLeft <= 0 || gameState.backupServer == null)) {
+			System.out.println("====== GAME ENDS ======");
+			for (Player p : this.gameState.players) {
+				System.out.println("Player #" + p.id + " : "
+						+ p.totalTreasuresFound);
+			}
+			// Terminate
+			System.exit(0);
+		}
 
 		try {
 			System.out.println("DEBUG: Updated client gameState. Primary #"
