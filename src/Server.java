@@ -319,11 +319,20 @@ public class Server implements IServer {
 	@Override
 	public synchronized GameStatus primaryFailed(int clientId,
 			MoveDirection moveDirection) throws RemoteException {
-
-		this.primaryFailed();
-
-		// process move
-		return this.move(clientId, moveDirection);
+		
+		try {
+			// verify
+			this.serverGameStatus.primaryServer.getId();
+			
+		} catch (RemoteException e) {
+			// truly failed
+			this.primaryFailed();
+			// process move
+			return this.move(clientId, moveDirection);
+		}
+		
+		// primary still alive
+		return this.serverGameStatus.primaryServer.move(clientId, moveDirection);
 	}
 
 	private void initPingPrimary() {
@@ -398,29 +407,22 @@ public class Server implements IServer {
 
 	}
 
-	private GameStatus primaryFailed() throws RemoteException {
-		
-		try {
-			// verify
-			this.serverGameStatus.primaryServer.getId();
-			
-		} catch (RemoteException e) {
-		
-			// first time receiving notification
-			if (!primaryFailed && isBackup) {
-				this.serverGameStatus.primaryServer = this;
-	
-				// stop pinging old primary server
-				this.pingTimer.cancel();
-	
-				// choose a new backup
-				this.chooseBackup();
-	
-				primaryFailed = true;
-				System.out.println("I am now primary server");
-			}
+	private void primaryFailed() throws RemoteException {
+
+		// first time receiving notification
+		if (!primaryFailed && isBackup) {
+			this.serverGameStatus.primaryServer = this;
+
+			// stop pinging old primary server
+			this.pingTimer.cancel();
+
+			// choose a new backup
+			this.chooseBackup();
+
+			primaryFailed = true;
+			System.out.println("I am now primary server");
 		}
-		return serverGameStatus;
+
 	}
 
 }
